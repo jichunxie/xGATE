@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="CPACT",                  # Name of your package
+    name="xGATE",                  # Name of your package
     version="0.1.0",               # Version number
     packages=find_packages(),      # Automatically find packages in your project
     install_requires=[             # List any package dependencies here
@@ -19,7 +19,7 @@ setup(
     author="Orlando Ferrer",            
     author_email="orlando8955@gmail.com",  
     description="A pipeline for single cell rna seq pathway analysis",     
-    url="https://github.com/Cafecito95/CPACT",
+    url="https://github.com/Cafecito95/xGATE",
     classifiers=[
         "Programming Language :: Python :: 3",
         "CC BY-NC-ND 4.0 license", 
