@@ -1,6 +1,6 @@
-# xGATE: Graph-based Adaptive Topology Embedding for Pathway Analysis
+# xGATE: Topology-aware pathway scoring framework
 
-**xGATE** is a knowledge-base-informed computational method for inferring pathway activity in single-cell RNA-seq (scRNA-seq) and spatial transcriptomics data. By capturing topology structures in gene co-expression graphs, xGATE integrates graph theory, deep learning, and hypothesis testing to provide accurate and robust pathway activity estimates that are resilient to batch effects.
+**xGATE** is a topology-aware pathway scoring framework that reads pathway activity from the topological fingerprints of gene co-expression graphs in single-cell RNA-seq (scRNA-seq) and spatial transcriptomics data. By capturing topology structures in gene co-expression graphs, xGATE integrates graph theory, deep learning, and hypothesis testing to provide accurate and robust pathway activity estimates that are resilient to batch effects.
 
 ## Key Features
 
