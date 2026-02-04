@@ -1,0 +1,41 @@
+# xGATE: Graph-based Adaptive Topology Embedding for Pathway Analysis
+
+**xGATE** is a knowledge-base-informed computational method for inferring pathway activity in single-cell RNA-seq (scRNA-seq) and spatial transcriptomics data. By capturing chain-like topology structures in gene co-expression graphs, xGATE integrates graph theory, deep learning, and hypothesis testing to provide accurate and robust pathway activity estimates that are resilient to batch effects.
+
+## Key Features
+
+- **Biologically-Informed & Flexible**: Integrates established pathway databases (KEGG, Reactome, WikiPathways) while supporting custom gene sets tailored to your research questions
+- **High Accuracy**: Leverages graph topology to capture biologically relevant co-expression patterns, delivering superior pathway activity identification across diverse cell types
+- **Batch-Effect Resilient**: Relies on co-expression relationships rather than absolute expression levels, making it robust to batch effects common in multi-sample scRNA-seq studies
+- **Topologically Aware**: Uses graph embeddings that capture meaningful network structures rather than treating pathways as unordered lists of genes
+
+## How xGATE Works
+
+**Input**: Count matrix + Gene set/pathway of interest → **Output**: Pathway p-value + Effect size
+
+1. **Network Construction**: Builds a gene co-expression graph from your expression data
+2. **Pathway Extraction**: Identifies pathway subgraph within the co-expression network
+3. **Graph Embeddings**: Derives embeddings capturing topology features (centrality, walk properties, structural metrics)
+4. **Null Distribution**: Uses a graph-based Variational Autoencoder (VAE) to establish null distribution
+5. **Hypothesis Testing**: Performs statistical testing to assess pathway significance and compute effect sizes
+
+![xGATE Overview](images/xGATE_Flowchart.jpeg)
+
+## Installation
+
+### Prerequisites
+- Python ≥ 3.8
+- A working count matrix from scRNA-seq or spatial transcriptomics (preferably normalized via scTransform or similar)
+
+### Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/jichunxie/xGATE.git
+cd xGATE
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+All required packages are specified in `requirements.txt`. The installation includes PyTorch (for VAE computations), networkx/igraph (for graph operations), and biological tools for pathway integration.
