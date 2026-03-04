@@ -14,12 +14,11 @@ setup(
         "torch==2.4.1",
         "scipy==1.10.1",
         "biopython==1.78",
-        "matplotlib==3.3.4"
+        "matplotlib==3.3.4",
+        "karateclub"
     ],
-    author="Orlando Ferrer",            
-    author_email="orlando8955@gmail.com",  
     description="A pipeline for single cell rna seq pathway analysis",     
-    url="https://github.com/Cafecito95/xGATE",
+    url="https://github.com/jichunxie/xGATE",
     classifiers=[
         "Programming Language :: Python :: 3",
         "CC BY-NC-ND 4.0 license", 

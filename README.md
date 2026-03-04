@@ -38,14 +38,17 @@ cd xGATE
 pip install -r requirements.txt
 ```
 
-All required packages are specified in `requirements.txt`. The installation includes PyTorch (for VAE computations), networkx/igraph (for graph operations), and biological tools for pathway integration.
+All required packages are specified in `requirements.txt`. The installation includes PyTorch (for VAE computations), networkx/igraph (for graph operations), karateclub (for graph features), and biological tools for pathway integration.
 
 ## Quick Start Guide
 
 ### Basic Workflow
 
 ```python
-from utilities import *
+from utilities import (create_sifinet_object, quantile_thres2, cal_coexp, 
+                       create_network, filter_lowexp, convert_gene_ids, 
+                       create_network_from_adj_matrix, get_categorized_pathways, 
+                       analyze_pathways, embedding_recon)
 import pandas as pd
 import numpy as np
 
@@ -96,10 +99,9 @@ print(results)
 ### Expected Results Structure
 
 The `analyze_pathways()` function returns a DataFrame with columns:
-- **Pathway**: Name of the pathway
-- **p_value**: Statistical significance of pathway activity
-- **effect_size**: Magnitude of pathway activity
-- **significant**: Boolean indicating significance at 0.05 threshold
+- **pathway**: Name of the pathway
+- **p-value**: Statistical significance of pathway activity
+- **z-score**: Magnitude of pathway activity (normalized reconstruction error)
 
 ### Using Custom Gene Sets
 
@@ -121,38 +123,19 @@ results = embedding_recon(G, categorized_pathways,
 ## Available Utility Functions
 
 ### Data Processing (`data_processing.py`)
-- `create_sifinet_object()`: Initialize data object from count matrix
-- `quantile_thres2()`: Calculate expression thresholds
-- `cal_coexp()`: Compute co-expression matrix
-- `cal_coexp_df()`: Co-expression for DataFrame input
-- `cal_coexp_sp()`: Co-expression for sparse matrices
-- `filter_lowexp()`: Filter low-expression edges
-- `feature_coexp()`: Feature-level co-expression analysis
+Provides core data filtering, matrix thresholding, and normalization functions required to prepare raw single-cell transcriptomic count matrices for co-expression analysis.
 
 ### Pathway Analysis (`pathway_analysis.py`)
-- `create_network()`: Build co-expression network
-- `create_network_from_adj_matrix()`: Create network from adjacency matrix
-- `convert_gene_ids()`: Convert between gene ID formats (Ensembl ↔ Entrez)
-- `get_entrez_mapping()`: Retrieve gene ID mappings
-- `get_categorized_pathways()`: Fetch pathway information from KEGG
-- `get_genes_in_pathway()`: Extract genes for specific pathway
-- `analyze_pathways()`: **Main function** for pathway significance testing
-- `gene_coexpression_network()`: Build network with custom parameters
+Handles network construction from processed adjacency matrices, implements statistical thresholds for edge significance, and serves as the main entry point to perform testing against established structural databases (KEGG, Reactome).
 
 ### Graph Embeddings (`embeddings.py`)
-- `generate_embedding()`: Create graph-based embeddings
-- `embedding_recon()`: Embedding reconstruction for pathway analysis
-- `longest_random_walk()`: Random walk feature extraction
-- `subgraph_centrality()`: Centrality-based metrics
+Extracts graph topological metrics. It calculates metrics such as harmonic centrality, eccentricity, and longest random walk lengths to build node-level structural features that inform the pathway topology.
 
 ### Competitive Analysis (`competitive_analysis.py`)
-- `competitive_pathway_analysis()`: Compare pathway significance with competing pathways
-- `embedding_recon_competitive()`: Competitive embedding reconstruction with visualization
+Performs competitive testing between target and alternate pathways. Uses a Variational Autoencoder to generate null distributions and compute competitive T-statistics and p-values for pathway significance.
 
 ### VAE Model (`vae_model.py`)
-- `VariationalAutoencoder`: Neural network for null distribution modeling
-- `vae_loss_function()`: Training loss calculation
-- `calculate_reconstruction_error()`: Assess embedding reconstruction quality
+Implements the underlying Variational Autoencoder (VAE) architecture in PyTorch. Used to generate synthetic background distributions for graph features to evaluate the statistical significance of observed pathway structures.
 
 ## Input Data Requirements
 
