@@ -306,6 +306,7 @@ def get_genes_in_pathway(pathway_id):
     return genes
 
 def analyze_pathways(G, test_pathways=None, categorized_pathways=None, pathway_genes=None, num_walks=200, max_walk_length=200, null_dist_size=200):
+    from .embeddings import embedding_recon  # local import avoids circular import at module load
     results = []
 
     if test_pathways and categorized_pathways:
