@@ -36,11 +36,13 @@ class VariationalAutoencoder(nn.Module):
 
     
 def vae_loss_function(recon_x, x, mu, logvar):
+    batch_size = x.shape[0]
     squared_error = (recon_x - x) ** 2
     mask = x == 0
-    squared_error[mask] = 0
-    recon_loss = torch.mean(squared_error)
-    kl_loss = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
+    squared_error = squared_error.masked_fill(mask, 0.0)
+    n_obs = (~mask).sum().clamp(min=1)
+    recon_loss = squared_error.sum() / n_obs
+    kl_loss = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp()) / batch_size
     return recon_loss + kl_loss
 
 def calculate_reconstruction_error(samples, model, loss_function):

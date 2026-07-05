@@ -7,6 +7,7 @@ import torch.nn as nn
 from scipy.linalg import expm
 from .pathway_analysis import normalize
 from .vae_model import VariationalAutoencoder, vae_loss_function, calculate_reconstruction_error
+from .seeding import set_seed
 
 def longest_random_walk(G, start_node_index, num_walks = 200, max_walk_length = 200):
     max_length = 0
@@ -58,11 +59,10 @@ def generate_embedding(G):
     return embedding
 
 
-def embedding_recon(G, categorized_pathways, pathway_genes, num_walks, max_walk_length, null_dist_size):
+def embedding_recon(G, categorized_pathways, pathway_genes, num_walks, max_walk_length, null_dist_size, seed=None):
+    set_seed(seed)
     node_names = set(v["name"] for v in G.vs)
     found_genes = [gene for gene in pathway_genes if gene in node_names]
-
-    fraction = len(found_genes) / max(1, len(pathway_genes))
 
     pathway_subgraph_s = G.subgraph([v.index for v in G.vs if v["name"] in found_genes])
 
@@ -71,14 +71,14 @@ def embedding_recon(G, categorized_pathways, pathway_genes, num_walks, max_walk_
     num_nodes = pathway_subgraph_s.vcount()
 
     for _ in range(null_dist_size):
-        vertices = random.sample(all_nodes, k=num_nodes)
+        vertices = random.sample(sorted(all_nodes), k=num_nodes)
         neg_subgraph = G.subgraph([v.index for v in G.vs if v["name"] in vertices])
         neg_subgraphs_pathway_s.append(neg_subgraph)
 
     random_subgraphs_pathway_s = []
 
     for _ in range(null_dist_size):
-        vertices = random.sample(all_nodes, k=num_nodes)
+        vertices = random.sample(sorted(all_nodes), k=num_nodes)
         random_subgraph = G.subgraph([v.index for v in G.vs if v["name"] in vertices])
         random_subgraphs_pathway_s.append(random_subgraph)
 

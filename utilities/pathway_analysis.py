@@ -300,12 +300,27 @@ def gather_pathways_between(start_pathway, end_pathway, categorized_pathways):
     return selected_pathways
 
 def get_genes_in_pathway(pathway_id):
-    pathway_file = REST.kegg_get(pathway_id, "kgml").read()
-    pathway = KGML_parser.read(pathway_file)
-    genes = [gene_id for element in pathway.genes for gene_id in element.name.split()]
+    # Accept a single pathway id or a list of ids. KEGG's kgml endpoint only
+    # serves one entry at a time, so fetch each id separately and pool the genes.
+    if isinstance(pathway_id, str):
+        pathway_ids = [pathway_id]
+    else:
+        pathway_ids = list(pathway_id)
+
+    genes = []
+    for pid in pathway_ids:
+        pathway_file = REST.kegg_get(pid, "kgml").read()
+        pathway = KGML_parser.read(pathway_file)
+        genes.extend(gene_id for element in pathway.genes for gene_id in element.name.split())
     return genes
 
-def analyze_pathways(G, test_pathways=None, categorized_pathways=None, pathway_genes=None, num_walks=200, max_walk_length=200, null_dist_size=200):
+def analyze_pathways(G, test_pathways=None, categorized_pathways=None, pathway_genes=None, num_walks=200, max_walk_length=200, null_dist_size=200, seed=None):
+    from .embeddings import embedding_recon  # local import avoids circular import at module load
+    from .seeding import set_seed
+
+    # Seed once here so the whole sweep is reproducible; inner embedding_recon
+    # calls keep seed=None so they share one continuous RNG stream.
+    set_seed(seed)
     results = []
 
     if test_pathways and categorized_pathways:

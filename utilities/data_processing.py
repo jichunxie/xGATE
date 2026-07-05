@@ -60,7 +60,7 @@ def create_sifinet_object(counts, gene_name=None, meta_data=None, data_name=None
     if issparse(counts):
         q5 = np.percentile(counts.toarray(), 50, axis=0)  # 50% quantile for each column
     else:
-        q5 = counts.quantile(0.5).tolist()  # 50% quantile for each column
+        q5 = counts.quantile(0.5).to_numpy()  # 50% quantile for each column
 
     n = counts.shape[0]
     p = counts.shape[1]
@@ -83,7 +83,7 @@ def quantile_thres(so, M_full, M_subcohort, sparse=False):
     M_full = pd.DataFrame.transpose(M_full)
     M_subcohort = pd.DataFrame.transpose(M_subcohort)
     n, p = M_full.shape  # dimensions from full matrix
-    Z = np.mean(M_full, axis=1)  # Use colMeans from the full matrix
+    Z = np.mean(M_full, axis=1)  # Use rowMeans from the full matrix
 
     if not so.sparse:
         dt = np.zeros((n, p))
@@ -165,26 +165,19 @@ def norm_FDR_SQAUC(value, sam_mean, sam_sd, alpha, n, p):
     else:
         return value_a_s[R2]
     
-def feature_coexp(self):
-    if not self.sparse:
-        self.coexp = self.cal_coexp(self.data_thres[0])
-    else:
-        self.coexp = self.cal_coexp_sp(self.data_thres[0])
-
-    np.fill_diagonal(self.coexp, 0)
-    return self
-
 def filter_lowexp(so, t1=10, t2=0.9, t3=0.9):
     if so.coexp is None or so.est_ms is None:
         raise ValueError("Coexpression matrix and estimated means/stds must be set before filtering.")
 
     r_set = set()
+    q5 = np.asarray(so.q5)
+    coexp = so.coexp.values if hasattr(so.coexp, 'values') else np.asarray(so.coexp)
     for target in range(3):  # Assuming q5 values are discretized as 0, 1, 2
-        screen_set = np.where(so.q5 == target)[0]
+        screen_set = np.where(q5 == target)[0]
         if len(screen_set) >= 2:
-            abs_sum = np.sum(np.abs(so.coexp[:, screen_set] - so.est_ms['mean']) > so.thres, axis=0)
-            pos_sum_w = np.sum(so.coexp[np.ix_(screen_set, screen_set)] > (so.thres + so.est_ms['mean']), axis=0)
-            pos_sum = np.sum(so.coexp[:, screen_set] > (so.thres + so.est_ms['mean']), axis=0)
+            abs_sum = np.sum(np.abs(coexp[:, screen_set] - so.est_ms['mean']) > so.thres, axis=0)
+            pos_sum_w = np.sum(coexp[np.ix_(screen_set, screen_set)] > (so.thres + so.est_ms['mean']), axis=0)
+            pos_sum = np.sum(coexp[:, screen_set] > (so.thres + so.est_ms['mean']), axis=0)
             
             valid_indices = screen_set[(abs_sum >= t1) & (pos_sum / abs_sum >= t2) & (pos_sum_w / pos_sum >= t3)]
             r_set.update(valid_indices)
@@ -193,7 +186,8 @@ def filter_lowexp(so, t1=10, t2=0.9, t3=0.9):
     so.kset = list(set(range(so.p)) - r_set)
     return so
 
-# This version of EstNull makes two changes: stops at t=2000 instead of t=1000, and sets uhat and shat values to their final values if the break condition is not reached
+# EstNull iterates up to t=1000 (s up to 5.0); if phi never falls below gan it still
+# computes uhat/shat at the final step and warns that null estimation did not converge.
 def EstNull(x, gamma=0.1):
     n = len(x)
     gan = n ** -gamma

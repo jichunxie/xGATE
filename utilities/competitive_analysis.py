@@ -9,6 +9,7 @@ from scipy.stats import norm
 from .pathway_analysis import normalize, gather_pathways_between, get_genes_in_pathway
 from .vae_model import VariationalAutoencoder, vae_loss_function, calculate_reconstruction_error
 from .embeddings import generate_embedding
+from .seeding import set_seed
 
 
 def embedding_recon_competitive(
@@ -21,7 +22,8 @@ def embedding_recon_competitive(
     neg_subgraphs_pathway_s=None, 
     random_subgraphs_pathway_s=None,
     plot=False,
-    pathway_name="Pathway"
+    pathway_name="Pathway",
+    seed=None
 ):
     """
     Perform embedding reconstruction for a given pathway.
@@ -42,10 +44,9 @@ def embedding_recon_competitive(
     - Dictionary containing reconstruction errors, p-value, z-score, and subgraphs.
     """
 
+    set_seed(seed)
     node_names = set(v["name"] for v in G.vs)
     found_genes = [gene for gene in pathway_genes if gene in node_names]
-
-    fraction = len(found_genes) / max(1, len(pathway_genes))
 
     pathway_subgraph_s = G.subgraph([v.index for v in G.vs if v["name"] in found_genes])
 
@@ -55,7 +56,7 @@ def embedding_recon_competitive(
         num_nodes = pathway_subgraph_s.vcount()
 
         for _ in range(null_dist_size):
-            vertices = random.sample(all_nodes, k=num_nodes)
+            vertices = random.sample(sorted(all_nodes), k=num_nodes)
             neg_subgraph = G.subgraph([v.index for v in G.vs if v["name"] in vertices])
             neg_subgraphs_pathway_s.append(neg_subgraph)
 
@@ -65,7 +66,7 @@ def embedding_recon_competitive(
         num_nodes = pathway_subgraph_s.vcount()
 
         for _ in range(null_dist_size):
-            vertices = random.sample(all_nodes, k=num_nodes)
+            vertices = random.sample(sorted(all_nodes), k=num_nodes)
             random_subgraph = G.subgraph([v.index for v in G.vs if v["name"] in vertices])
             random_subgraphs_pathway_s.append(random_subgraph)
 
@@ -170,7 +171,8 @@ def competitive_pathway_analysis(
     num_walks=200, 
     max_walk_length=200, 
     null_dist_size=200,
-    plot=False
+    plot=False,
+    seed=None
 ):
     """
     Perform competitive pathway analysis between two pathways using T-statistic based p-values.
@@ -188,9 +190,14 @@ def competitive_pathway_analysis(
     Returns:
     - DataFrame containing the competitive analysis results including competitive p-values based on T-statistics.
     """
-    
+
+    # Seed once here so both pathways are reproducible; the inner
+    # embedding_recon_competitive calls keep seed=None so they draw from one
+    # continuous RNG stream (distinct nulls per pathway, not a repeated draw).
+    set_seed(seed)
+
     results = []
-    
+
     # Gather pathways and get genes for pathway1
     pathway_list1 = gather_pathways_between(pathway1, pathway1, categorized_pathways)
     genes1 = get_genes_in_pathway(pathway_list1)
